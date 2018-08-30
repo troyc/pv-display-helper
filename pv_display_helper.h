@@ -83,7 +83,7 @@ typedef void (*fatal_provider_error_handler)(struct pv_display_provider *provide
  * @param display The display which suffered the unrecoverable error.
  *
  */
-typedef void (*fatal_display_error_handler)(struct pv_display *display);
+typedef void (*fatal_display_error_handler)(struct pv_display *display, void * opaque);
 
 
 /******************************************************************************/
@@ -181,6 +181,11 @@ struct pv_display
 
     //The IVC connection used to share the cursor image.
     struct libivc_client *cursor_image_connection;
+
+
+    //Connection status
+    bool connected;
+	bool disconnect_in_progress;
 
     //
     // Methods

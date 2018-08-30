@@ -12,12 +12,12 @@
  *
  * @param display The PV display whose fatal error handler is to be triggered.
  */
-static void __trigger_fatal_error_on_consumer(struct pv_display_consumer *consumer)
+static void __trigger_fatal_error_on_consumer(struct pv_display_consumer *consumer, bool disconnect)
 {
     __PV_HELPER_TRACE__;
     pv_helper_lock(&consumer->lock);
     if(consumer->fatal_error_handler)
-        consumer->fatal_error_handler(consumer);
+        consumer->fatal_error_handler(consumer, disconnect);
     pv_display_error(" triggering consumer error\n");
     pv_helper_unlock(&consumer->lock);
 }
@@ -190,7 +190,7 @@ static bool __try_to_receive_control_packet(struct pv_display_consumer *consumer
     if(rc)
     {
         pv_display_error("Could not query IVC for its available data!\n");
-        __trigger_fatal_error_on_consumer(consumer);
+        __trigger_fatal_error_on_consumer(consumer, false);
         return false;
     }
 
@@ -245,7 +245,7 @@ static bool __try_to_receive_control_packet(struct pv_display_consumer *consumer
 
         //... clean up, and return.
         pv_helper_free(buffer);
-        __trigger_fatal_error_on_consumer(consumer);
+        __trigger_fatal_error_on_consumer(consumer, false);
         return false;
     }
 
@@ -342,10 +342,9 @@ static void __handle_control_channel_disconnect(void *opaque, struct libivc_clie
     struct pv_display_consumer *consumer = opaque;
 
     pv_display_debug(" Disconnecting Control Channel for domid %d port %d!\n",  consumer->rx_domain, consumer->control_port);
-    __trigger_fatal_error_on_consumer(consumer);
 
-    //Make sure ivc gets cleaned up.
-    libivc_disconnect(client);
+    //The channel will be disconnected in the main thread.
+    __trigger_fatal_error_on_consumer(consumer, true);
 }
 
 void __handle_control_connection(void *opaque, struct libivc_client *client)
@@ -1316,7 +1315,7 @@ static void consumer_destroy(struct pv_display_consumer *consumer)
       consumer->control_channel_server_listening = false;
 
       if(consumer->fatal_error_handler)
-          consumer->fatal_error_handler(consumer);
+          consumer->fatal_error_handler(consumer, true);
 
       pv_helper_free(consumer);
   }
