@@ -1,0 +1,3 @@
+*.[ch] 			usr/src/ddh-@UPSTREAM_VERSION@
+Makefile 			usr/src/ddh-@UPSTREAM_VERSION@
+dkms.conf 			usr/src/ddh-@UPSTREAM_VERSION@

@@ -1,0 +1,23 @@
+Source: ddh-dkms
+Section: utils 
+Priority: optional
+Build-Depends: debhelper (>= 7.0.50~), dkms, ivc-dev, libxen-dev
+Standards-Version: 3.8.0
+Maintainer: SVRome <SVRome@ainfosec.com>
+
+Package: ddh-dev
+Section: libdevel
+Priority: optional
+Architecture: any
+Depends:
+Description: "universal" ddh headers
+
+Package: ddh-dkms
+Architecture: i386 amd64
+Depends: ivc-dkms
+Description: awesome ddh kernel modules
+
+Package: libddh0
+Architecture: i386 amd64
+Depends: ${misc:Depends}
+Description: awesome ddh shared object

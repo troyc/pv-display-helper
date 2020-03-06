@@ -1,0 +1,159 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{9876DE2A-5C78-40D2-AF98-068F0364B67F}</ProjectGuid>
+    <TemplateGuid>{1bc93793-694f-48fe-9372-81e2b05556fd}</TemplateGuid>
+    <RootNamespace>display_driver_helper</RootNamespace>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>Driver</ConfigurationType>
+    <DriverType>KMDF</DriverType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>Driver</ConfigurationType>
+    <DriverType>KMDF</DriverType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
+    <ALLOW_DATE_TIME>1</ALLOW_DATE_TIME>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>Driver</ConfigurationType>
+    <DriverType>KMDF</DriverType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
+    <ConfigurationType>Driver</ConfigurationType>
+    <DriverType>KMDF</DriverType>
+    <DriverTargetPlatform>Desktop</DriverTargetPlatform>
+    <ALLOW_DATE_TIME>1</ALLOW_DATE_TIME>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
+    <IncludePath>$(SolutionDir)inc\xen;$(SolutionDir)inc;$(SolutionDir)\net;$(SolutionDir)xenhdrs;$(SolutionDir)ivc_driver\include;$(SolutionDir)ivc_driver\include\ks;$(SolutionDir)ivc_driver\include\us\platform\windows;$(SolutionDir)ivc_driver\include\us;$(SolutionDir)ivc_driver\include\core;$(SolutionDir)ivc_driver\include\ks\platform;$(SolutionDir)ivc_driver\include\ks\platform\windows;$(SolutionDir)ivc_driver\src\data-structures;$(SolutionDir)xenhdrs;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)$(Platform)\$(ConfigurationName)\</OutDir>
+    <IntDir>$(Platform)\$(ConfigurationName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
+    <IncludePath>$(SolutionDir)inc\xen;$(SolutionDir)inc;$(SolutionDir)\net;$(SolutionDir)xenhdrs;$(SolutionDir)ivc_driver\include;$(SolutionDir)ivc_driver\include\ks;$(SolutionDir)ivc_driver\include\us\platform\windows;$(SolutionDir)ivc_driver\include\us;$(SolutionDir)ivc_driver\include\core;$(SolutionDir)ivc_driver\include\ks\platform;$(SolutionDir)ivc_driver\include\ks\platform\windows;$(SolutionDir)ivc_driver\src\data-structures;$(SolutionDir)xenhdrs;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)$(Platform)\$(ConfigurationName)\</OutDir>
+    <IntDir>$(Platform)\$(ConfigurationName)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
+    <IncludePath>$(SolutionDir)inc\xen;$(SolutionDir)inc;$(SolutionDir)\net;$(SolutionDir)xenhdrs;$(SolutionDir)ivc_driver\include;$(SolutionDir)ivc_driver\include\ks;$(SolutionDir)ivc_driver\include\us\platform\windows;$(SolutionDir)ivc_driver\include\us;$(SolutionDir)ivc_driver\include\core;$(SolutionDir)ivc_driver\include\ks\platform;$(SolutionDir)ivc_driver\include\ks\platform\windows;$(SolutionDir)ivc_driver\src\data-structures;$(SolutionDir)xenhdrs;$(IncludePath)</IncludePath>
+    <IntDir>$(Platform)\$(ConfigurationName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(ConfigurationName)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
+    <IncludePath>$(SolutionDir)inc\xen;$(SolutionDir)inc;$(SolutionDir)\net;$(SolutionDir)xenhdrs;$(SolutionDir)ivc_driver\include;$(SolutionDir)ivc_driver\include\ks;$(SolutionDir)ivc_driver\include\us\platform\windows;$(SolutionDir)ivc_driver\include\us;$(SolutionDir)ivc_driver\include\core;$(SolutionDir)ivc_driver\include\ks\platform;$(SolutionDir)ivc_driver\include\ks\platform\windows;$(SolutionDir)ivc_driver\src\data-structures;$(IncludePath)</IncludePath>
+    <IntDir>$(Platform)\$(ConfigurationName)\</IntDir>
+    <OutDir>$(SolutionDir)$(Platform)\$(ConfigurationName)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>KERNEL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WppEnabled>true</WppEnabled>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(ConfigurationName)\xenutil.lib;$(SolutionDir)$(Platform)\$(ConfigurationName)\xenevtchn.lib;$(SolutionDir)$(Platform)\$(ConfigurationName)\ivc.lib;$(DDK_LIB_PATH)Ndis.lib;$(DDK_LIB_PATH)Wdmsec.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>KERNEL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WppEnabled>true</WppEnabled>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(ConfigurationName)\xenutil.lib;$(SolutionDir)$(Platform)\$(ConfigurationName)\xenevtchn.lib;$(SolutionDir)$(Platform)\$(ConfigurationName)\ivc.lib;$(DDK_LIB_PATH)Ndis.lib;$(DDK_LIB_PATH)Wdmsec.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>KERNEL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WppEnabled>true</WppEnabled>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(ConfigurationName)\xenutil.lib;$(SolutionDir)$(Platform)\$(ConfigurationName)\xenevtchn.lib;$(SolutionDir)$(Platform)\$(ConfigurationName)\ivc.lib;$(DDK_LIB_PATH)Ndis.lib;$(DDK_LIB_PATH)Wdmsec.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>KERNEL=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WppEnabled>true</WppEnabled>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(SolutionDir)$(Platform)\$(ConfigurationName)\xenutil.lib;$(SolutionDir)$(Platform)\$(ConfigurationName)\xenevtchn.lib;$(SolutionDir)$(Platform)\$(ConfigurationName)\ivc.lib;$(DDK_LIB_PATH)Ndis.lib;$(DDK_LIB_PATH)Wdmsec.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Inf Include="display-driver-helper.inf" />
+  </ItemGroup>
+  <ItemGroup>
+    <FilesToPackage Include="$(TargetPath)" />
+    <FilesToPackage Include="@(Inf->'%(CopyOutput)')" Condition="'@(Inf)'!=''" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\dedicated_display_helper.c" />
+    <ClCompile Include="..\..\pv_display_helper.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\dedicated_display_helper.h" />
+    <ClInclude Include="..\..\pv_display_helper.h" />
+    <ClInclude Include="..\..\pv_driver_interface.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
