@@ -1,0 +1,65 @@
+;
+; display-driver-helper.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=System
+ClassGuid={4d36e97d-e325-11ce-bfc1-08002be10318}
+Provider=%ManufacturerName%
+CatalogFile=display-driver-helper.cat
+DriverVer=@INF_DATE@,@MAJOR_VERSION@.@MINOR_VERSION@.@MICRO_VERSION@.@BUILD_NUMBER@
+
+; ================= Class section =====================
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+display-driver-helper.sys  = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT@INF_ARCH@
+
+[Standard.NT@INF_ARCH@]
+%displaydriverhelper.DeviceDesc%		=displaydriverhelper_Device, XENBUS\VEN_@VENDOR_PREFIX@@VENDOR_DEVICE_ID@&DEV_VIDEO&REV_09000002
+%displaydriverhelper.DeviceDesc%		=displaydriverhelper_Device, XENBUS\VEN_@VENDOR_PREFIX@0001&DEV_VIDEO&REV_09000002
+%displaydriverhelper.DeviceDesc%		=displaydriverhelper_Device, XENBUS\VEN_@VENDOR_PREFIX@0002&DEV_VIDEO&REV_09000002
+
+[displaydriverhelper_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+display-driver-helper.sys
+
+;-------------- Service installation
+[displaydriverhelper_Device.NT.Services]
+AddService = displaydriverhelper,%SPSVCINST_ASSOCSERVICE%, displaydriverhelper_Service_Inst
+
+; -------------- displaydriverhelper driver install sections
+[displaydriverhelper_Service_Inst]
+DisplayName    = %displaydriverhelper.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\display-driver-helper.sys
+LoadOrderGroup = Extended Base
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[displaydriverhelper_Device.NT.Wdf]
+KmdfService =  displaydriverhelper, displaydriverhelper_wdfsect
+[displaydriverhelper_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="Assured Information Security, Inc." ; TODO: add ManufacturerName
+ClassName="System devices" ; TODO: edit ClassName
+DiskName = "displaydriverhelper Installation Disk"
+displaydriverhelper.DeviceDesc = "displaydriverhelper Device"
+displaydriverhelper.SVCDESC = "displaydriverhelper Service"

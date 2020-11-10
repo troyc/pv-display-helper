@@ -29,11 +29,13 @@
 #if defined __linux__ && defined __KERNEL__
 #define KERNEL
 #elif defined _WIN32 && defined KERNEL
+#define _STL110_
+#include <errno.h>
+#include <ntifs.h>
+#include <wdf.h>
 #include <wdm.h>
 #include <windef.h>
 #include <wintypes.h>
-#include <ntifs.h>
-#include <wdf.h>
 #define BUG() do { \
     DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL, "BUG: failure at %s:%d/%s()!\n", __FILE__, __LINE__, __func__); \
 } while(0)
@@ -52,6 +54,8 @@
 
 #if defined _WIN32
 #define MEM_TAG 'cviP'
+//Suppress assignment within conditional expression.
+#pragma warning (disable: 4706)
 #ifndef PAGE_SIZE
 #define PAGE_SIZE 0x1000
 #endif
