@@ -200,7 +200,7 @@ typedef void (*display_no_longer_available_request_handler)(struct pv_display_co
 typedef void (*text_mode_request_handler)(struct pv_display_consumer *consumer,
         bool force);
 
-typedef void (*fatal_consumer_error_handler)(struct pv_display_consumer *consumer);
+typedef void (*fatal_consumer_error_handler)(struct pv_display_consumer *consumer, bool disconnect);
 
 /**
  * PV Display Consumer "Object"

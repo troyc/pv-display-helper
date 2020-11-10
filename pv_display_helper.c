@@ -211,10 +211,7 @@ static bool __try_to_read_header(struct pv_display_provider *provider)
 
     //Attempt to perform a packetized read, which will pull in a header packet
     //if at all possible.
-    pv_helper_lock(&provider->lock);
     rc = libivc_recv(provider->control_channel, (char *)&provider->current_packet_header, sizeof(struct dh_header));
-    pv_helper_unlock(&provider->lock);
-
     return (rc == SUCCESS);
 }
 
@@ -225,7 +222,7 @@ static bool __try_to_read_header(struct pv_display_provider *provider)
  *
  * @return True iff a packet was read.
  */
-static bool __try_to_receive_control_packet(struct pv_display_provider *provider)
+static bool __try_to_receive_control_packet(struct pv_display_provider *provider, char ** provider_buffer)
 {
     __PV_HELPER_TRACE__;
 
@@ -236,8 +233,6 @@ static bool __try_to_receive_control_packet(struct pv_display_provider *provider
     uint16_t checksum;
     char *buffer;
     int rc;
-
-    pv_helper_lock(&provider->lock);
 
     //Determine the size of the remainder of the packet-- composed of the packet body ("payload") and footer.
     length_with_footer = provider->current_packet_header.length + sizeof(struct dh_footer);
@@ -250,7 +245,6 @@ static bool __try_to_receive_control_packet(struct pv_display_provider *provider
     if(rc)
     {
         pv_display_error("Could not query IVC for its available data!\n");
-        pv_helper_unlock(&provider->lock);
         __trigger_fatal_error_on_provider(provider);
         return false;
     }
@@ -259,7 +253,6 @@ static bool __try_to_receive_control_packet(struct pv_display_provider *provider
     //abort quietly. We'll get the data on the next event.
     if(data_available < length_with_footer)
     {
-        pv_helper_unlock(&provider->lock);
         return false;
     }
 
@@ -274,7 +267,6 @@ static bool __try_to_receive_control_packet(struct pv_display_provider *provider
     {
         pv_display_error("Could not allocate enough space (" SIZE_FORMAT ") for a receive buffer. Will try to pick up again on next receipt!\n",
             length_with_footer);
-        pv_helper_unlock(&provider->lock);
         return false;
     }
 
@@ -287,7 +279,6 @@ static bool __try_to_receive_control_packet(struct pv_display_provider *provider
     if(rc)
     {
         pv_display_error("Could not read in a packet, though IVC claims it's there. Locking problems?\n");
-        pv_helper_unlock(&provider->lock);
         pv_helper_free(buffer);
         return false;
     }
@@ -309,26 +300,36 @@ static bool __try_to_receive_control_packet(struct pv_display_provider *provider
 
         //... clean up, and return.
         pv_helper_free(buffer);
-        pv_helper_unlock(&provider->lock);
-
         __trigger_fatal_error_on_provider(provider);
         return false;
     }
 
     //Invalidate the current packet header, as we've already handled it!
     provider->current_packet_header.length = 0;
-
-    //Give up exclusive access to the display object, as we're done modifying it.
-    pv_helper_unlock(&provider->lock);
-
-    //Finally, pass the compelted packet to our packet receipt handler.
-    __handle_control_packet_receipt(provider, &provider->current_packet_header, buffer);
-
-    //Clean up our buffer.
-    pv_helper_free(buffer);
+    *provider_buffer = buffer;
     return true;
 }
 
+/**
+ * Attempts to read in an entire packet with a single lock.
+ *
+ * @return 0 if there is an error reading the packet
+ */
+static bool __try_to_read_entire_control_packet(struct pv_display_provider * provider, struct dh_header *current_header, char ** packet_buffer)
+{
+    bool continue_to_read;
+    *packet_buffer = NULL;
+    pv_helper_lock(&provider->lock);
+
+    continue_to_read = __try_to_read_header(provider);
+    if (continue_to_read && provider->current_packet_header.length > 0)
+    {
+        continue_to_read = __try_to_receive_control_packet(provider, packet_buffer);
+    }
+    memcpy(current_header, &provider->current_packet_header, sizeof(struct dh_header));
+    pv_helper_unlock(&provider->lock);
+    return continue_to_read;
+}
 
 /**
  * Handle control channel events. These events usually indicate that we've
@@ -351,19 +352,27 @@ static void __handle_control_channel_event(void *opaque, struct libivc_client *c
     //the data available, stopping we've run out of data to read.
     do
     {
+        char *buffer;
+        continue_to_read = FALSE;
+
         //If we haven't yet read in a valid header, try do to so.
         if(provider->current_packet_header.length == 0)
         {
-            pv_display_debug("I'm not aware of an existing packet. Trying to read its header.\n");
-            continue_to_read = __try_to_read_header(provider);
-        }
+            struct dh_header current_packet_header;
+            pv_display_debug("I'm not aware of an existing packet. Trying to read it.\n");
+            continue_to_read = __try_to_read_entire_control_packet(provider, &current_packet_header, &buffer);
+            if (!continue_to_read)
+            {
+                break;
+            }
+            //Finally, pass the completed packet to our packet receipt handler.
+            __handle_control_packet_receipt(provider, &current_packet_header, buffer);
 
-        //If we now have a defined packet "shape" to receive, try to receive it.
-        if(provider->current_packet_header.length > 0)
-        {
-            pv_display_debug("Receiving a Type-%u packet in progress. Trying to receive...\n",
-                             (unsigned int)provider->current_packet_header.type);
-            continue_to_read = __try_to_receive_control_packet(provider);
+            //clean up the buffer
+            if (buffer != NULL)
+            {
+                pv_helper_free(buffer);
+            }
         }
     }
     while(continue_to_read);
@@ -436,7 +445,7 @@ static void __trigger_fatal_error_on_display(struct pv_display *display)
     __PV_HELPER_TRACE__;
 
     if(display->fatal_error_handler)
-        display->fatal_error_handler(display);
+        display->fatal_error_handler(display, display->driver_data);
 }
 
 
@@ -916,6 +925,9 @@ static int pv_display_reconnect(struct pv_display *display,
           pv_display_error("Warning: could not reconnect to PV cursor port!\n");
     }
 
+	// Everything is now reconnected, so set the connection state back to true.
+	display->connected = true;
+
     return 0;
 }
 
@@ -963,6 +975,33 @@ static int pv_display_blank_display(struct pv_display *display, bool dpms, bool 
     return 0;
 }
 
+static void pv_display_disconnect(struct pv_display *display)
+{
+    __PV_HELPER_TRACE__;
+    pv_display_checkp(display);
+
+    pv_helper_lock(&display->lock);
+    //Tear down the event connection...
+    if (display->event_connection)
+        libivc_disconnect(display->event_connection);
+    display->event_connection = NULL;
+
+    //... the framebuffer...
+    if (display->framebuffer_connection)
+        libivc_disconnect(display->framebuffer_connection);
+    display->framebuffer_connection = NULL;
+
+    //... the dirty rectangles connection...
+    if (display->dirty_rectangles_connection)
+        libivc_disconnect(display->dirty_rectangles_connection);
+    display->dirty_rectangles_connection = NULL;
+
+    //... and the cursor image connection.
+    if (display->cursor_image_connection)
+        libivc_disconnect(display->cursor_image_connection);
+    display->cursor_image_connection = NULL;
+    pv_helper_unlock(&display->lock);
+}
 
 /**
  * Destroys a given PV display, freeing any associated memory.
@@ -971,22 +1010,8 @@ static void pv_display_destroy(struct pv_display *display)
 {
     __PV_HELPER_TRACE__;
     pv_display_checkp(display);
-
-    //Tear down the event connection...
-    if(display->event_connection)
-        libivc_disconnect(display->event_connection);
-
-    //... the framebuffer...
-    if(display->framebuffer_connection)
-        libivc_disconnect(display->framebuffer_connection);
-
-    //... the dirty rectangles connection...
-    if(display->dirty_rectangles_connection)
-        libivc_disconnect(display->dirty_rectangles_connection);
-
-    //... and the cursor image connection.
-    if(display->cursor_image_connection)
-        libivc_disconnect(display->cursor_image_connection);
+    
+    pv_display_disconnect(display);
 
     //Finally, tear down the display object.
     if(display)
@@ -999,7 +1024,7 @@ static void pv_display_destroy(struct pv_display *display)
  * one-way data (such as resize events, or dirty rectangles).
  *
  * @param display The display provider for which a control channel should be opened.
- * @param client An out argument to recieve the newly created IVC client.
+ * @param client An out argument to receive the newly created IVC client.
  * @param rx_domiain The remote domain to connect to (the "display domain").
  * @param port The port to connect to on the remote domain.
  * @param disconnect_handler The callback function to be executed if the connection disconnects.
@@ -1047,25 +1072,36 @@ static void __handle_disconnect_for_connection(struct libivc_client *connection,
     //Simple token which prevents nested disconnect handlers.
     //This allows a user to request a disconnected as part of a response to a disconnect event
     //without creating an infinite hell-chain.
-    static bool handler_in_progress = false;
 
     __PV_HELPER_TRACE__;
 
     //Validate our input.
     pv_display_checkp(connection);
     pv_display_checkp(display);
+    pv_helper_lock(&display->lock);
+
+	uint16_t port;
+	libivc_getport(connection, &port);
 
     //If we're already handling a disconnect event, abort.
-    if(handler_in_progress)
+    if (display->disconnect_in_progress ||!display->connected) {
+        if (!display->connected)
+			pv_display_debug(" %s: *****Already disconnecting this key:0x%x and port:%d\n", __FUNCTION__, display->key, port);
+        pv_helper_unlock(&display->lock);
         return;
+    }
 
     //If we were able to locate a display, trigger its fatal error handler.
+    
     if(display)
     {
-        handler_in_progress = true;
+		pv_display_debug(" %s: *****Starting disconnect for key:0x%x and port:%d\n", __FUNCTION__, display->key, port);
+		display->disconnect_in_progress = true;
         __trigger_fatal_error_on_display(display);
-        handler_in_progress = false;
+		display->connected = false;
+		display->disconnect_in_progress = false;
     }
+    pv_helper_unlock(&display->lock);
 }
 
 
@@ -1109,8 +1145,8 @@ static void __cursor_image_disconnect_handler(void *opaque, struct libivc_client
     // In this initial implementation, a hardware cursor connection error will force
     // a disconnect, so the reconnect sequence can fix things. Instead, losing the
     // hardware cursor should trigger a swap to software cursor, and spawn a background
-    // hardware cursor reconnect.
-    pv_display_error("Hardware cursor connection broken. Forcing reconnect.");
+    // hardware cursor reconnect. 
+    pv_display_error("Hardware cursor connection broken. Forcing reconnect.\n");
     __handle_disconnect_for_connection(client, opaque);
 }
 
@@ -1400,6 +1436,8 @@ static int provider_create_display(struct pv_display_provider *provider, struct 
     display->width  = width;
     display->height = height;
     display->stride = stride;
+    display->connected = false;
+	display->disconnect_in_progress = false;
 
     //By default, assume we have no connections.
     display->framebuffer_connection      = NULL;
@@ -1458,6 +1496,9 @@ static int provider_create_display(struct pv_display_provider *provider, struct 
     display->blank_display          = pv_display_blank_display;
     display->destroy                = pv_display_destroy;
 
+    //Set connected
+    display->connected = true;
+
     //Bind events.
     display->register_fatal_error_handler = pv_display_register_fatal_error_handler;
 
@@ -1501,6 +1542,8 @@ int provider_destroy_display(struct pv_display_provider *provider, struct pv_dis
     pv_display_checkp(provider, -EINVAL);
     pv_display_checkp(display, -EINVAL);
 
+    pv_display_disconnect(display);
+
     // Notify the display handler that the display is being torn down.
     request.key = display->key;
 
@@ -1516,8 +1559,8 @@ int provider_destroy_display(struct pv_display_provider *provider, struct pv_dis
         pv_display_error("Could not notify the Display Handler of display destruction.\n");
     }
 
-    // Ask the display object to destroy itself.
-    display->destroy(display);
+    //Finally destroy the object
+    pv_helper_free(display);
     return rc;
 }
 
@@ -1880,12 +1923,20 @@ NTSTATUS PvDisplayHelperEvtDeviceAdd(_In_ WDFDRIVER Driver, _Inout_ PWDFDEVICE_I
 
 #endif
 
+//
+//These functions were for use by qemu.  They may be obsolete
+//
 void try_to_read_header(struct pv_display_provider *provider)
 {
+    pv_helper_lock(&provider->lock);
     __try_to_read_header(provider);
+    pv_helper_unlock(&provider->lock);
 }
 
 void try_to_receive_control_packet(struct pv_display_provider *provider)
 {
-    __try_to_receive_control_packet(provider);
+    pv_helper_lock(&provider->lock);
+    char *  buffer;
+    __try_to_receive_control_packet(provider, &buffer);
+    pv_helper_unlock(&provider->lock);
 }
