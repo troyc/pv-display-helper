@@ -30,7 +30,7 @@
     <DriverTargetPlatform>Desktop</DriverTargetPlatform>
     <SupportsPackaging>true</SupportsPackaging>
     <ALLOW_DATE_TIME>1</ALLOW_DATE_TIME>
-    <TestCertificate>..\display-driver-helper.pfx</TestCertificate>
+    <TestCertificate>..\..\src\display-driver-helper.pfx</TestCertificate>
   </PropertyGroup>
   <Import Project="..\targets.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
