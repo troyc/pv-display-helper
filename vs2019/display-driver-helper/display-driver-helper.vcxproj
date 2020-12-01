@@ -2,9 +2,6 @@
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\configs.props" />
   <ItemGroup>
-    <Inf Include="..\display-driver-helper.inf" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="..\..\dedicated_display_helper.c" />
     <ClCompile Include="..\..\pv_display_helper.c" />
   </ItemGroup>
